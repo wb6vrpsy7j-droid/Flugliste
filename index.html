@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Flugliste">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-512.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#e9eff3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1a24" media="(prefers-color-scheme: dark)">
+<title>Flugliste aus ADS-B-Daten</title>
+<style>
+:root{color-scheme:light dark;--bg:#e9eff3;--paper:#fbfcfc;--ink:#0e2a3b;--mute:#586d7a;--rule:#c5d2da;--amber:#f2b705;--on-amber:#241a00;--err:#b3261e}
+@media (prefers-color-scheme:dark){:root{--bg:#0b1a24;--paper:#12252f;--ink:#e6eef3;--mute:#93a8b4;--rule:#26404e;--amber:#f2b705;--on-amber:#241a00;--err:#ff8a80}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Segoe UI",system-ui,-apple-system,sans-serif;padding:max(24px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(48px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+main{max-width:860px;margin:0 auto}
+h1{font:600 1.6rem/1.2 Georgia,"Times New Roman",serif;margin:0 0 4px}
+.sub{color:var(--mute);margin:0 0 20px}
+form{background:var(--paper);border:1px solid var(--rule);border-left:6px solid var(--amber);padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;align-items:end}
+label{display:flex;flex-direction:column;font-size:.85rem;color:var(--mute);gap:4px}
+input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--rule);padding:8px;border-radius:2px}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:3px solid var(--amber);outline-offset:1px}
+button{font:inherit;font-weight:600;border:0;padding:10px 16px;border-radius:2px;cursor:pointer;background:var(--amber);color:var(--on-amber)}
+button:disabled{opacity:.55;cursor:wait}
+button.alt{background:transparent;color:var(--ink);border:1px solid var(--ink)}
+#status{margin:16px 0;min-height:1.5em}
+#status.err{color:var(--err)}
+.sum{display:flex;flex-wrap:wrap;gap:24px;align-items:baseline;margin:8px 0 12px}
+.sum b{font:600 1.6rem Georgia,serif;font-variant-numeric:tabular-nums}
+.sum span{color:var(--mute);font-size:.9rem;margin-left:4px}
+.sum .sp{flex:1}
+.wrap{overflow-x:auto;background:var(--paper);border:1px solid var(--rule)}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--rule);white-space:nowrap}
+th{font-weight:600;font-size:.85rem;color:var(--mute);border-bottom:2px solid var(--ink)}
+td.r,th.r{text-align:right}
+tfoot td{font-weight:600;border-bottom:0;border-top:2px solid var(--ink)}
+.note{color:var(--mute);font-size:.85rem;margin-top:16px;max-width:70ch}
+[hidden]{display:none}
+html{-webkit-text-size-adjust:100%}
+button,input,select{touch-action:manipulation;min-height:44px}
+input,select{font-size:16px;min-width:0;width:100%}
+input[type=date]{-webkit-appearance:none;appearance:none;text-align:left}
+button{-webkit-tap-highlight-color:transparent;padding:10px 20px}
+@media screen and (max-width:640px){
+  h1{font-size:1.4rem}
+  form{grid-template-columns:1fr 1fr;padding:14px}
+  form label:first-child,form label:nth-child(4),form button{grid-column:1/-1}
+  .sum{gap:12px 20px}
+  .sum .sp{display:none}
+  .sum label{flex:1 1 100%}
+  .sum button{flex:1 1 40%}
+  thead{display:none}
+  table,tbody,tfoot,tr,td{display:block}
+  tbody tr{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;padding:10px 14px;border-bottom:1px solid var(--rule)}
+  tbody td{border:0;padding:0;white-space:normal}
+  tbody td:nth-child(1){grid-area:1/1;font-weight:600}
+  tbody td:nth-child(4){grid-area:1/2;text-align:right;font-weight:600}
+  tbody td:nth-child(2){grid-area:2/1}
+  tbody td:nth-child(3){grid-area:2/2;text-align:right}
+  tbody td:nth-child(5){grid-area:3/1}
+  tbody td:nth-child(6){grid-area:3/2;text-align:right}
+  tbody td:nth-child(2)::before{content:"Start ";color:var(--mute)}
+  tbody td:nth-child(3)::before{content:"Landung ";color:var(--mute)}
+  tbody td:nth-child(5)::before{content:"Von ";color:var(--mute)}
+  tbody td:nth-child(6)::before{content:"Nach ";color:var(--mute)}
+  tfoot tr{display:flex;justify-content:space-between;padding:12px 14px;border-top:2px solid var(--ink)}
+  tfoot td{border:0;padding:0}
+  tfoot td:nth-child(3){display:none}
+}
+.print-only{display:none}
+@media print{
+  :root{--bg:#fff;--paper:#fff;--ink:#000;--mute:#444;--rule:#999}
+  body{padding:0;font-size:12pt}
+  form,#status,.sum label,.sum button,.sum .sp,.sub{display:none}
+  .print-only{display:block;margin:0 0 8px;font-weight:600}
+  .wrap{border:0;overflow:visible}
+  tr{break-inside:avoid}
+  .note{margin-top:12px}
+}
+</style>
+</head>
+<body>
+<main>
+<h1>Flugliste aus ADS-B-Daten</h1>
+<p class="sub">Alle Flüge eines Flugzeugs in einem Zeitraum, mit Flugzeit und Jahressumme.</p>
+
+<form id="f">
+  <label>Kennzeichen<input id="reg" value="D-MUPC" autocomplete="off"></label>
+  <label>Von<input id="von" type="date"></label>
+  <label>Bis<input id="bis" type="date"></label>
+  <label>Hex-Code (optional)<input id="hex" placeholder="z. B. 3e1234" autocomplete="off"></label>
+  <button id="go" type="submit">Flüge laden</button>
+</form>
+
+<div id="status" role="status"></div>
+
+<section id="out" hidden>
+  <p class="print-only" id="ph"></p>
+  <div class="sum">
+    <div><b id="nFl">0</b><span>Flüge</span></div>
+    <div><b id="tot">0:00</b><span>Stunden in der Luft</span></div>
+    <div class="sp"></div>
+    <label>Zeitangabe<select id="tz"><option value="local">Ortszeit</option><option value="utc">UTC</option></select></label>
+    <button id="csv" class="alt" type="button">CSV speichern</button>
+    <button id="prt" class="alt" type="button">Drucken</button>
+  </div>
+  <div class="wrap">
+    <table>
+      <thead><tr><th>Datum</th><th>Start</th><th>Landung</th><th class="r">Dauer</th><th>Von</th><th>Nach</th></tr></thead>
+      <tbody id="rows"></tbody>
+      <tfoot><tr><td colspan="3">Summe</td><td class="r" id="foot">0:00</td><td colspan="2"></td></tr></tfoot>
+    </table>
+  </div>
+</section>
+
+<p class="note">Datenquelle: adsb.aero mit dem Archiv von adsb.lol (ODbL). Die Positionen stammen von Hobby-Empfängern. Flüge in Gegenden mit schlechter Abdeckung oder tief über dem Boden können fehlen. Gezählt wird die Zeit in der Luft, nicht die Blockzeit.</p>
+</main>
+
+<script>
+const API = "https://adsb.aero/api/v1/query";
+const $ = id => document.getElementById(id);
+let flights = [];
+
+$("von").value = new Date().getFullYear() + "-01-01";
+$("bis").value = new Date().toISOString().slice(0, 10);
+
+function toDate(t) {
+  if (t == null) return null;
+  if (typeof t === "number") return new Date(t * 1000);
+  let s = String(t);
+  if (!/[zZ]|[+-]\d\d:?\d\d$/.test(s)) s += "Z";
+  return new Date(s);
+}
+const hm = min => Math.floor(min / 60) + ":" + String(min % 60).padStart(2, "0");
+function status(text, isErr) { const s = $("status"); s.textContent = text; s.className = isErr ? "err" : ""; }
+
+function stamp(d, utc) {
+  if (!d) return ["", ""];
+  const o = utc ? { timeZone: "UTC" } : {};
+  return [
+    d.toLocaleDateString("de-DE", { ...o, day: "2-digit", month: "2-digit", year: "numeric" }),
+    d.toLocaleTimeString("de-DE", { ...o, hour: "2-digit", minute: "2-digit" })
+  ];
+}
+
+function table() {
+  const utc = $("tz").value === "utc", body = $("rows");
+  body.textContent = "";
+  let total = 0;
+  const out = [];
+  for (const f of flights) {
+    const s = toDate(f.start_ts), e = toDate(f.end_ts);
+    const min = s && e ? Math.round((e - s) / 60000) : 0;
+    total += min;
+    const [d1, t1] = stamp(s, utc), [, t2] = stamp(e, utc);
+    const cells = [d1, t1, t2, hm(min), f.start_airport_ident || "", f.end_airport_ident || ""];
+    out.push(cells);
+    const tr = body.insertRow();
+    cells.forEach((c, i) => { const td = tr.insertCell(); td.textContent = c; if (i === 3) td.className = "r"; });
+  }
+  $("nFl").textContent = flights.length;
+  $("tot").textContent = hm(total);
+  $("foot").textContent = hm(total);
+  return out;
+}
+
+async function load(ev) {
+  ev.preventDefault();
+  const reg = $("reg").value.trim(), hex = $("hex").value.trim().toLowerCase();
+  const von = $("von").value, bis = $("bis").value;
+  if (!(reg || hex) || !von || !bis) return status("Bitte Kennzeichen (oder Hex-Code) und Zeitraum angeben.", true);
+  if (von > bis) return status("Das Startdatum liegt nach dem Enddatum.", true);
+
+  const end = new Date(bis + "T00:00:00Z");
+  end.setUTCDate(end.getUTCDate() + 1);
+  const match = hex ? { icao24: [hex] } : { registration_prefix: reg };
+  const seen = new Map();
+  let cursor = null;
+  $("go").disabled = true; $("out").hidden = true;
+  try {
+    do {
+      const r = await fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ match, start_from: von + "T00:00:00Z", end_date: end.toISOString(), limit: 500, include_path: false, cursor })
+      });
+      if (!r.ok) throw new Error("Die API meldet Fehler " + r.status + ": " + (await r.text()).slice(0, 300));
+      const d = await r.json();
+      (d.flights || []).forEach(f => seen.set(f.flight_id || f.icao24 + f.start_ts, f));
+      cursor = d.cursor;
+      status(seen.size + " Flüge gefunden, lese zurück bis " + String(d.window_from || "").slice(0, 10) + " …");
+      if (cursor) await new Promise(res => setTimeout(res, 700));
+    } while (cursor);
+    flights = [...seen.values()].sort((a, b) => toDate(a.start_ts) - toDate(b.start_ts));
+    if (!flights.length) return status("Keine Flüge gefunden. Versuche es mit dem Hex-Code des Flugzeugs. Die Abdeckung der Daten ist lückenhaft.", true);
+    table();
+    const de = x => x.split("-").reverse().join(".");
+    $("ph").textContent = (reg || hex) + ", Flüge vom " + de(von) + " bis " + de(bis);
+    $("out").hidden = false;
+    status("Fertig: " + flights.length + " Flüge von " + von.split("-").reverse().join(".") + " bis " + bis.split("-").reverse().join(".") + ".");
+  } catch (e) {
+    status(e.message === "Failed to fetch" ? "Keine Verbindung zur API. Prüfe die Internetverbindung und öffne die Datei direkt im Browser." : e.message, true);
+  } finally { $("go").disabled = false; }
+}
+
+function saveCsv() {
+  const head = ["Datum", "Start", "Landung", "Dauer (h:mm)", "Von", "Nach"];
+  const data = [head, ...table()].map(r => r.join(";")).join("\r\n");
+  const name = ($("reg").value.trim() || "flugzeug") + "_fluege_" + $("von").value + "_" + $("bis").value + ".csv";
+  const blob = new Blob(["\ufeff" + data], { type: "text/csv;charset=utf-8" });
+  const file = new File([blob], name, { type: "text/csv" });
+  // iPhone/iPad: Teilen-Menü (Dateien, Mail, Numbers ...)
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    navigator.share({ files: [file], title: name }).catch(() => {});
+    return;
+  }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+$("f").addEventListener("submit", load);
+$("tz").addEventListener("change", () => flights.length && table());
+$("csv").addEventListener("click", saveCsv);
+$("prt").addEventListener("click", () => window.print());
+</script>
+</body>
+</html>
