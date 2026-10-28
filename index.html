@@ -12,32 +12,32 @@
 <meta name="theme-color" content="#0b1a24" media="(prefers-color-scheme: dark)">
 <title>Flugliste aus ADS-B-Daten</title>
 <style>
-:root{color-scheme:light dark;--bg:#e9eff3;--paper:#fbfcfc;--ink:#0e2a3b;--mute:#586d7a;--rule:#c5d2da;--amber:#f2b705;--on-amber:#241a00;--err:#b3261e}
+:root{color-scheme:light dark;--fl:"Calibri Light",Calibri,-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI Light","Segoe UI",system-ui,sans-serif;--bg:#e9eff3;--paper:#fbfcfc;--ink:#0e2a3b;--mute:#586d7a;--rule:#c5d2da;--amber:#f2b705;--on-amber:#241a00;--err:#b3261e}
 @media (prefers-color-scheme:dark){:root{--bg:#0b1a24;--paper:#12252f;--ink:#e6eef3;--mute:#93a8b4;--rule:#26404e;--amber:#f2b705;--on-amber:#241a00;--err:#ff8a80}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Segoe UI",system-ui,-apple-system,sans-serif;padding:max(24px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(48px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.5 Calibri,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,"Helvetica Neue",sans-serif;padding:max(24px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(48px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
 main{max-width:860px;margin:0 auto}
-h1{font:600 1.6rem/1.2 Georgia,"Times New Roman",serif;margin:0 0 4px}
+h1{font-family:var(--fl);font-weight:300;font-size:2rem;line-height:1.15;letter-spacing:-.01em;margin:0 0 4px}
 .sub{color:var(--mute);margin:0 0 20px}
 form{background:var(--paper);border:1px solid var(--rule);border-left:6px solid var(--amber);padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;align-items:end}
 label{display:flex;flex-direction:column;font-size:.85rem;color:var(--mute);gap:4px}
 input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--rule);padding:8px;border-radius:2px}
 input:focus-visible,select:focus-visible,button:focus-visible{outline:3px solid var(--amber);outline-offset:1px}
-button{font:inherit;font-weight:600;border:0;padding:10px 16px;border-radius:2px;cursor:pointer;background:var(--amber);color:var(--on-amber)}
+button{font:inherit;font-weight:500;border:0;padding:10px 16px;border-radius:2px;cursor:pointer;background:var(--amber);color:var(--on-amber)}
 button:disabled{opacity:.55;cursor:wait}
 button.alt{background:transparent;color:var(--ink);border:1px solid var(--ink)}
 #status{margin:16px 0;min-height:1.5em}
 #status.err{color:var(--err)}
 .sum{display:flex;flex-wrap:wrap;gap:24px;align-items:baseline;margin:8px 0 12px}
-.sum b{font:600 1.6rem Georgia,serif;font-variant-numeric:tabular-nums}
+.sum b{font-family:var(--fl);font-weight:300;font-size:2.2rem;line-height:1.1;font-variant-numeric:tabular-nums}
 .sum span{color:var(--mute);font-size:.9rem;margin-left:4px}
 .sum .sp{flex:1}
 .wrap{overflow-x:auto;background:var(--paper);border:1px solid var(--rule)}
 table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
 th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--rule);white-space:nowrap}
-th{font-weight:600;font-size:.85rem;color:var(--mute);border-bottom:2px solid var(--ink)}
+th{font-weight:500;font-size:.85rem;color:var(--mute);border-bottom:2px solid var(--ink)}
 td.r,th.r{text-align:right}
-tfoot td{font-weight:600;border-bottom:0;border-top:2px solid var(--ink)}
+tfoot td{font-weight:500;border-bottom:0;border-top:2px solid var(--ink)}
 .note{color:var(--mute);font-size:.85rem;margin-top:16px;max-width:70ch}
 [hidden]{display:none}
 html{-webkit-text-size-adjust:100%}
@@ -46,7 +46,7 @@ input,select{font-size:16px;min-width:0;width:100%}
 input[type=date]{-webkit-appearance:none;appearance:none;text-align:left}
 button{-webkit-tap-highlight-color:transparent;padding:10px 20px}
 @media screen and (max-width:640px){
-  h1{font-size:1.4rem}
+  h1{font-size:1.7rem}
   form{grid-template-columns:1fr 1fr;padding:14px}
   form label:first-child,form label:nth-child(4),form button{grid-column:1/-1}
   .sum{gap:12px 20px}
@@ -57,8 +57,8 @@ button{-webkit-tap-highlight-color:transparent;padding:10px 20px}
   table,tbody,tfoot,tr,td{display:block}
   tbody tr{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;padding:10px 14px;border-bottom:1px solid var(--rule)}
   tbody td{border:0;padding:0;white-space:normal}
-  tbody td:nth-child(1){grid-area:1/1;font-weight:600}
-  tbody td:nth-child(4){grid-area:1/2;text-align:right;font-weight:600}
+  tbody td:nth-child(1){grid-area:1/1;font-weight:500}
+  tbody td:nth-child(4){grid-area:1/2;text-align:right;font-weight:500}
   tbody td:nth-child(2){grid-area:2/1}
   tbody td:nth-child(3){grid-area:2/2;text-align:right}
   tbody td:nth-child(5){grid-area:3/1}
@@ -76,7 +76,7 @@ button{-webkit-tap-highlight-color:transparent;padding:10px 20px}
   :root{--bg:#fff;--paper:#fff;--ink:#000;--mute:#444;--rule:#999}
   body{padding:0;font-size:12pt}
   form,#status,.sum label,.sum button,.sum .sp,.sub{display:none}
-  .print-only{display:block;margin:0 0 8px;font-weight:600}
+  .print-only{display:block;margin:0 0 8px;font-weight:500}
   .wrap{border:0;overflow:visible}
   tr{break-inside:avoid}
   .note{margin-top:12px}
