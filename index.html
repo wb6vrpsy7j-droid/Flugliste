@@ -89,7 +89,7 @@ button{-webkit-tap-highlight-color:transparent;padding:10px 20px}
 <p class="sub">Alle Flüge eines Flugzeugs in einem Zeitraum, mit Flugzeit und Jahressumme.</p>
 
 <form id="f">
-  <label>Kennzeichen<input id="reg" placeholder="z. B. D-ABCD" autocomplete="off"></label>
+  <label>Kennzeichen<input id="reg" placeholder="z. B. D-ABCD" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false"></label>
   <label>Von<input id="von" type="date"></label>
   <label>Bis<input id="bis" type="date"></label>
   <label>Hex-Code (optional)<input id="hex" placeholder="z. B. 3e1234" autocomplete="off"></label>
@@ -224,6 +224,26 @@ function saveCsv() {
   a.click();
   URL.revokeObjectURL(a.href);
 }
+
+// Kennzeichen: Großbuchstaben, Bindestrich automatisch (D-XXXX, OE-XXX, HB-XXX ...)
+const PRE2 = ["OE", "HB", "PH", "OO", "OK", "SP"];
+function formatReg(v) {
+  const r = v.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const p2 = PRE2.find(p => r.startsWith(p));
+  if (p2 && r.length > 2) return p2 + "-" + r.slice(2);
+  if (!p2 && /^[DFGI][A-Z]/.test(r)) return r[0] + "-" + r.slice(1);
+  return r;
+}
+$("reg").addEventListener("input", e => {
+  const el = e.target;
+  const before = el.value.slice(0, el.selectionStart).replace(/[^A-Za-z0-9]/g, "").length;
+  const nv = formatReg(el.value);
+  if (nv === el.value) return;
+  el.value = nv;
+  let n = 0, i = 0;
+  while (i < nv.length && n < before) { if (/[A-Z0-9]/.test(nv[i])) n++; i++; }
+  el.setSelectionRange(i, i);
+});
 
 $("f").addEventListener("submit", load);
 $("tz").addEventListener("change", () => flights.length && table());
